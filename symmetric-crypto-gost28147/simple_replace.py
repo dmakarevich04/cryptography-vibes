@@ -1,5 +1,3 @@
-# Режим простой замены (ECB - Electronic Codebook)
-
 TABLE = [
     [4, 10, 9, 2, 13, 8, 0, 14, 6, 11, 1, 12, 7, 15, 5, 3],
     [14, 11, 4, 12, 6, 13, 15, 10, 2, 3, 8, 1, 0, 7, 5, 9],
@@ -14,15 +12,15 @@ TABLE = [
 def _substitute(value: int) -> int:
     out = 0
     for i in range(8):
-        nibble = (value >> (4 * i)) & 0xF
-        out |= TABLE[i][nibble] << (4 * i)
+        nibble = (value >> (4 * i)) & 0xF #сдвигаем и обрезаем
+        out |= TABLE[i][nibble] << (4 * i) 
     return out
 
 def _round(L: int, R: int, key: int) -> tuple[int, int]:
     temp = (R + key) % (2**32)
     temp = _substitute(temp)
-    temp = ((temp << 11) & 0xFFFFFFFF) | (temp >> (32 - 11))
-    return R, L ^ temp
+    temp = ((temp << 11) & 0xFFFFFFFF) | (temp >> (32 - 11)) #циклический сдвиг
+    return R, L ^ temp #новое L - это старое R
 
 def encrypt_block(block: bytes, keys: list[int]) -> bytes:
     n1 = int.from_bytes(block[:4], "little")

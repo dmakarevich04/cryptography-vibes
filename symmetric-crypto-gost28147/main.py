@@ -13,9 +13,8 @@ class CryptoApp:
         self.root.geometry("900x600")
 
         self.filepath = None
-        self.encrypted_data = None  # последний результат шифрования
+        self.encrypted_data = None  
 
-        # Верхняя панель (выбор файла)
         frame_top = tk.Frame(root)
         frame_top.pack(pady=10)
 
@@ -25,16 +24,13 @@ class CryptoApp:
         self.lbl_file = tk.Label(frame_top, text="Файл не выбран", fg="gray")
         self.lbl_file.pack(side=tk.LEFT, padx=5)
 
-        # Генерация ключей
         self.keys = utils.generate_keys()
 
-        # Панель с кнопками
         frame_modes = tk.LabelFrame(root, text="Действие")
         frame_modes.pack(fill="x", padx=10, pady=10)
 
         tk.Button(frame_modes, text="Зашифровать (ECB)", command=self.run_ecb).pack(fill="x", pady=5)
 
-        # Журнал вывода
         self.output = scrolledtext.ScrolledText(root, wrap=tk.WORD, font=("Consolas", 10), height=30)
         self.output.pack(expand=True, fill="both", padx=10, pady=10)
 
@@ -57,14 +53,12 @@ class CryptoApp:
             messagebox.showwarning("Ошибка", "Сначала выберите файл!")
             return
 
-        # читаем входной файл
         try:
             blocks = utils.read_file_in_binary(self.filepath)
         except Exception as e:
             messagebox.showerror("Ошибка", f"Не удалось прочитать файл: {e}")
             return
 
-        # шифрование и расшифровка
         encrypted = simple_replace.simple_replace_ecb_encrypt(blocks, self.keys)
         decrypted = simple_replace.simple_replace_ecb_decrypt(encrypted, self.keys)
 
@@ -72,7 +66,6 @@ class CryptoApp:
         self.encrypted_data = b"".join(encrypted)
         decrypted_data = b"".join(decrypted)
 
-        # вывод в журнал
         self.log("=== [ECB режим] ===")
         self.log(f"Исходный текст:\n{original_data.decode('utf-8', errors='ignore')}")
         self.log(f"\n\nЗашифрованный текст (hex):\n{self.encrypted_data.hex()}")
