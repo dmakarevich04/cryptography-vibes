@@ -1,6 +1,7 @@
 from contants import A, C, TAU, PI
 from typing import Tuple
 
+
 def add_512(a: bytes, b: bytes) -> bytes:
     result = bytearray(64)
     carry = 0
@@ -42,34 +43,34 @@ def transform_l(data: bytes) -> bytes:
     return bytes(out)
 
 
-def key_schedule(keys: bytes, iter_index: int) -> bytes:
-    keys = transform_x(keys, C[iter_index])
-    keys = transform_s(keys)
-    keys = transform_p(keys)
-    keys = transform_l(keys)
-    return keys
+def key_schedule(key: bytes, iter_index: int) -> bytes:
+    key = transform_x(key, C[iter_index])
+    key = transform_s(key)
+    key = transform_p(key)
+    key = transform_l(key)
+    return key
 
 
-def transform_e(keys: bytes, block: bytes, state: bytes) -> Tuple[bytes, bytes]:
-    state = transform_x(block, keys)
+def transform_e(key: bytes, block: bytes, state: bytes) -> Tuple[bytes, bytes]:
+    state = transform_x(block, key)
 
     for i in range(12):
         state = transform_s(state)
         state = transform_p(state)
         state = transform_l(state)
-        keys = key_schedule(keys, i)
-        state = transform_x(state, keys)
+        key = key_schedule(key, i)
+        state = transform_x(state, key)
 
-    return keys, state
+    return key, state
 
 
 def transform_g(n: bytes, hash_val: bytes, message: bytes) -> bytes:
-    keys = transform_x(n, hash_val)
-    keys = transform_s(keys)
-    keys = transform_p(keys)
-    keys = transform_l(keys)
+    key = transform_x(n, hash_val)
+    key = transform_s(key)
+    key = transform_p(key)
+    key = transform_l(key)
 
-    _, temp = transform_e(keys, message, b'\x00' * 64)
+    _, temp = transform_e(key, message, b'\x00' * 64)
 
     temp = transform_x(temp, hash_val)
     hash_val = transform_x(temp, message)
@@ -82,16 +83,21 @@ def streebog_core(message: bytes, initial_hash: bytes) -> bytes:
     hash_val = initial_hash
 
     blocks = [message[i:i+64] for i in range(0, len(message), 64)]
+    if len(blocks) == 0:
+        blocks.append(b'')
 
     for block in blocks:
         block_bitlen = len(block) * 8
         block_size = b'\x00' * 62 + block_bitlen.to_bytes(2, 'big')
 
-        if len(block) == 64:
+        if block == b'':
+            padded = b'\x00' * (63 - len(block)) + b'\x01' + block
+        elif len(block) == 64:
             padded = block
+            padded = padded[::-1]
         else:
             padded = block + b'\x01' + b'\x00' * (63 - len(block))
-        padded = padded[::-1]
+            padded = padded[::-1]
 
         hash_val = transform_g(n, hash_val, padded)
         n = add_512(n, block_size)
@@ -100,7 +106,7 @@ def streebog_core(message: bytes, initial_hash: bytes) -> bytes:
     hash_val = transform_g(b'\x00' * 64, hash_val, n)
     hash_val = transform_g(b'\x00' * 64, hash_val, sigma)
 
-    return hash_val[::-1]  
+    return hash_val[::-1]
 
 
 def streebog_512(message: bytes) -> bytes:

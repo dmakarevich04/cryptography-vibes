@@ -5,6 +5,7 @@ def left_rotate(w, n):
 
 
 def process_block(block, A, B, C, D, E):
+    #пришел блок 64 байта = 512 бит, раунд обраьатывает 32-битное слово, т. е. 16 слов уже есть
     w = [0] * 80
     for i in range(16):
         w[i] = struct.unpack('>I', block[i*4:i*4+4])[0]
@@ -58,7 +59,7 @@ def sha1_hash(data: bytes):
     for i in range(0, len(data), 64):
         block = data[i:i+64]
         if len(block) < 64:
-            raise ValueError("Padding error: chunk too short")
+            raise ValueError("Padding error: block too short")
         A, B, C, D, E = process_block(block, A, B, C, D, E)
     
     return '%08x%08x%08x%08x%08x' % (A, B, C, D, E)

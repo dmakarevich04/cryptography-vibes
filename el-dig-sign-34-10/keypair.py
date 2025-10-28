@@ -18,7 +18,7 @@ class ECPoint:
         if self == other:
             return self.double()
         if self.x == other.x:
-            return ECPoint(None, None)  # Точка на бесконечности
+            return ECPoint(None, None) 
         l = ((other.y - self.y) * pow(other.x - self.x, -1, p)) % p
         x3 = (l * l - self.x - other.x) % p
         y3 = (l * (self.x - x3) - self.y) % p
@@ -48,9 +48,15 @@ class ECPoint:
 
 class ECKeyPair:
     def __init__(self):
-        self.k = random.randrange(1, q)
-        G = ECPoint(x, y)
-        self.Q = G.mul(self.k)
+        self.d = random.randrange(1, q)
+        P = ECPoint(x, y)
+        if P.x is None or P.y is None:
+            raise ValueError("Base point P is the point at infinity.")
+        if (P.y * P.y - (P.x * P.x * P.x + a * P.x + b)) % p != 0:
+            raise ValueError("Base point P is not on the elliptic curve.")
+        if P.mul(q).x is not None or P.mul(q).y is not None:
+            raise ValueError("Base point P does not have order q.")
+        self.Q = P.mul(self.d)
 
 
 def generate_keys():
