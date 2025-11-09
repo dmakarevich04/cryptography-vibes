@@ -21,6 +21,9 @@ class ECPoint:
         y3 = (l * (self.x - x3) - self.y) % p
         return ECPoint(x3, y3)
     
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+    
     def double(self):
         if self.y == 0:
             return ECPoint(None, None)
@@ -41,6 +44,19 @@ class ECPoint:
             k >>= 1
 
         return result
+    
+    def __neg__(self):
+        if self.x is None or self.y is None:
+            return ECPoint(None, None)
+        return ECPoint(self.x, (-self.y) % p)
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __repr__(self):
+        if self.x is None:
+            return "ECPoint(infinity)"
+        return f"ECPoint({self.x}, {self.y})"
 
 
 class ECKeyPair:
